@@ -9,6 +9,16 @@ const app = express();
 
 // middleware
 app.use(express.json());
+const requireToken = async (req, res, next) => {
+  try {
+    const token = req.headers.authorization;
+    const user = await User.byToken(token);
+    req.user = user;
+    next();
+  } catch (ex) {
+    next(ex);
+  }
+};
 
 // routes
 app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'index.html')));
@@ -21,22 +31,22 @@ app.post('/api/auth', async (req, res, next) => {
   }
 });
 
-app.get('/api/auth', async (req, res, next) => {
-  try {
-    res.send(await User.byToken(req.headers.authorization));
-  } catch (ex) {
-    next(ex);
-  }
+app.get('/api/auth', requireToken, async (req, res, next) => {
+  res.send(req.user);
 });
 
-app.get('/api/users/:userId/notes', async (req, res, next) => {
+app.get('/api/users/:userId/notes', requireToken, async (req, res, next) => {
   try {
     const { userId } = req.params;
-    const notes = await Note.findAll({
-      where: { userId },
-      attributes: ['text'],
-    });
-    res.send(notes);
+    if (req.user.id === +userId) {
+      const notes = await Note.findAll({
+        where: { userId },
+        attributes: ['text'],
+      });
+      res.send(notes);
+    } else {
+      next({ message: 'unauthorized' });
+    }
   } catch (ex) {
     next(ex);
   }

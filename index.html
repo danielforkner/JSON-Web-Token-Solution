@@ -48,7 +48,11 @@
                 }
               })
               setAuth(auth)
-              const { data: notes } = await axios.get(`/api/users/${auth.id}/notes`)
+              const { data: notes } = await axios.get(`/api/users/${auth.id}/notes`, {
+                headers: {
+                  authorization: token
+                }
+              })
               setNotes(notes)
             }
           }
