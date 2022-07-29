@@ -1,11 +1,15 @@
 const express = require('express');
-const app = express();
-app.use(express.json());
+const path = require('path');
 const {
   models: { User },
 } = require('./db');
-const path = require('path');
 
+const app = express();
+
+// middleware
+app.use(express.json());
+
+// routes
 app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'index.html')));
 
 app.post('/api/auth', async (req, res, next) => {
@@ -24,6 +28,7 @@ app.get('/api/auth', async (req, res, next) => {
   }
 });
 
+// error handler
 app.use((err, req, res, next) => {
   console.log(err);
   res.status(err.status || 500).send({ error: err.message });
